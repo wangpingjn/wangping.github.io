@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <style type="text/css">
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "宋体";
+            font-size:1.1em;
+        }
+
+        input,
+        button {
+            font-family: "宋体";
+            font-size: 1em;
+        }
+
+        #d-func {
+            height: 40px;
+            padding-left: 40px;
+            padding-top: 10px;
+            font-size: 1em;
+        }
+
+        .absolute {
+            position: absolute;
+        }
+
+        #d-invoice {
+            width: 1233px;
+            height: 729px;
+            background-image: url(files/invoice2.jpg);
+            background-position: 0 -50px;
+            background-repeat: no-repeat;
+            margin-left: 60px;
+        }
+        
+        .top1 {
+            top: 130px;
+        }
+
+        #d-seqno {
+            left: 288px;
+        }
+
+        #d-type {
+            left: 572px;
+        }
+
+        #d-code {
+            left: 906px;
+        }
+
+        #d-name {
+            top: 164px;
+            left: 240px;
+        }
+
+        #d-list {
+            top: 243px;
+            left: 260px;
+            width: 768px;
+            height: 600px;
+        }
+
+        #d-list .s-type {
+            width: 100px;
+            margin-left: 20px;
+        }
+
+        #d-list .s-amount {
+            margin-left: 440px;
+        }
+
+        .d-item {
+            height: 25px;
+        }
+        
+        .top4 
+        {
+            top: 611px;
+        }
+        
+        #d-amount-big 
+        {
+            left: 276px;
+        }
+
+        #d-amount {
+            left: 820px;
+        }
+        
+        .top5 
+        {
+            top: 678px;  
+        }
+        
+        #d-date 
+        {
+            left: 850px;
+        }
+        
+        #d-unit 
+        {
+            left: 302px;
+        }
+    </style>
+    <script type="text/javascript" src="files/jquery-1.12.4.min.js"></script>
+    <script type="text/javascript" src="files/md5.min.js"></script>
+    <style media="print" type="text/css">
+        .noprint {
+            display: none;
+        }
+    </style>
+    <script type="text/javascript">
+        var sum = parseFloat(0);
+        function newInvoice() {
+            sum = 0;
+            newSeqno();
+            $('#i-name').val('');
+            $('#d-name').html('');
+            $('#d-list').html('');
+            $('#d-amount').html('');
+            $('#d-code').html('');
+        }
+
+        function getCookie() {
+            var s_date;
+            var s_seqno;
+            var cookie = document.cookie;
+            var cookies = cookie.split(/;\s+/g);
+            if (cookies.length > 0) {
+                for (var i = 0; i < cookies.length; i++) {
+                    var ccookies = cookies[i].split('=');
+                    if (ccookies[0] === ('s_date')) {
+                        s_date = ccookies[1];
+                    } else if (ccookies[0] === ('s_seqno')) {
+                        s_seqno = ccookies[1];
+                    }
+                }
+            }
+
+            return {
+                s_date: s_date,
+                s_seqno: s_seqno
+            }
+        }
+
+        function setCookie(s_date, s_seqno) {
+            document.cookie = 's_date=' + s_date;
+            document.cookie = 's_seqno=' + s_seqno;
+            document.cookie = 'expires=' + (24 * 60 * 60 * 1000);
+        }
+
+        function getSeqnoStr(s_seqno) {
+            var num = parseInt(s_seqno);
+            if (num < 10) {
+                return '000' + num;
+            } else if (num < 100) {
+                return '00' + num;
+            } else if (num < 1000) {
+                return '0' + num;
+            }
+
+            return num;
+        }
+
+        function newSeqno() {
+            var date = new Date();
+            var y = date.getFullYear();
+            var m = date.getMonth() + 1;
+            var d = date.getDay() + 1;
+            var str = y + (m < 10 ? '0' + m : m) + (d < 10 ? '0' + d : d);
+
+            var cookie = getCookie();
+            var s_seqno = 1;
+            if (cookie.s_date === str) {
+                s_seqno = parseInt(cookie.s_seqno) + 1;
+            }
+            setCookie(str, s_seqno);
+            $('#d-seqno').html(str + getSeqnoStr(s_seqno));
+            $('#d-date').html(y + '&nbsp;&nbsp;&nbsp;&nbsp;' + m + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + d);
+        }
+
+        function setName(obj) {
+            $("#d-name").html(obj.value);
+            setCode();
+        }
+        function add(fType) {
+            var amountStr = prompt("输入" + fType + "的金额", '');
+            if (amountStr == null) return;
+
+            amountStr = amountStr.replace(/\s+/g, '');
+            if (amountStr === '') return;
+
+            try {
+                var amount = parseFloat(amountStr);
+                if (isNaN(amount) || amount <= 0) return;
+
+                sum += amount;
+                $("#d-list").append('<div class="d-item"><span class="s-type">' + fType + '</span><span class="s-amount">' + amount.toFixed(2) + '</span></div>');
+                $('#d-amount').html(parseFloat(sum).toFixed(2));
+                $('#d-amount-big').html(smalltoBIG(sum));
+                setCode();
+            } catch (e) {
+
+            }
+        }
+
+        function setCode() {
+            var seqno = $('#d-seqno').html();
+            var name = $('#d-name').html();
+            var amount = $('#d-amount').html();
+            $('#d-code').html(md5(seqno + name + amount).substr(20));
+        }
+
+        /** 数字金额大写转换(可以处理整数,小数,负数) */
+        function smalltoBIG(n) {
+            var fraction = ['角', '分'];
+            var digit = ['零', '壹', '贰', '叁', '肆', '伍', '陆', '柒', '捌', '玖'];
+            var unit = [['元', '万', '亿'], ['', '拾', '佰', '仟']];
+            var head = n < 0 ? '欠' : '';
+            n = Math.abs(n);
+
+            var s = '';
+
+            for (var i = 0; i < fraction.length; i++) {
+                s += (digit[Math.floor(n * 10 * Math.pow(10, i)) % 10] + fraction[i]).replace(/零./, '');
+            }
+            s = s || '整';
+            n = Math.floor(n);
+
+            for (var i = 0; i < unit[0].length && n > 0; i++) {
+                var p = '';
+                for (var j = 0; j < unit[1].length && n > 0; j++) {
+                    p = digit[n % 10] + unit[1][j] + p;
+                    n = Math.floor(n / 10);
+                }
+                s = p.replace(/(零.)*零$/, '').replace(/^$/, '零') + unit[0][i] + s;
+            }
+            return head + s.replace(/(零.)*零元/, '元').replace(/(零.)+/g, '零').replace(/^整$/, '零元整');
+        }
+    </script>
+</head>
+
+<body>
+    <div id="d-func" class="noprint">
+        <button id="b-new" onclick="newInvoice()">开票</button>
+        <span>姓名：
+            <input type="text" id="i-name" onblur="setName(this)" />
+        </span>
+        <button id="b-chinese" onclick="add('中药费')">中药费</button>
+        <button id="b-western" onclick="add('西药费')">西药费</button>
+        <button id="b-check" onclick="add('检查费')">检查费</button>
+        <button id="b-treat" onclick="add('诊疗费')">诊疗费</button>
+        <button id="b-print" onclick="print()">打印</button>
+    </div>
+    <div id="d-invoice">
+        <div class="absolute top1" id="d-seqno"></div>
+        <div class="absolute top1" id="d-type">社区卫生服务站</div>
+        <div class="absolute top1" id="d-code"></div>
+        <div class="absolute top2" id="d-name"></div>
+        <div class="absolute top3" id="d-list"></div>
+        <div class="absolute top4" id="d-amount-big"></div>
+        <div class="absolute top4" id="d-amount"></div>
+        <div class="absolute top5" id="d-unit">理想新城社区卫生服务站</div>
+        <div class="absolute top5" id="d-date"></div>
+    </div>
+</body>
+<html>
