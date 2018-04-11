@@ -172,7 +172,7 @@
             var date = new Date();
             var y = date.getFullYear();
             var m = date.getMonth() + 1;
-            var d = date.getDay() + 1;
+            var d = date.getDate();
             var str = y + (m < 10 ? '0' + m : m) + (d < 10 ? '0' + d : d);
 
             var cookie = getCookie();
